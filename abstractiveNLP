@@ -1,0 +1,37 @@
+import torch
+import json
+from transformers import T5Tokenizer, T5ForConditionalGeneration, T5Config
+import time
+
+start = time.time()
+
+model = T5ForConditionalGeneration.from_pretrained('t5-base')
+tokenizer = T5Tokenizer.from_pretrained('t5-large')
+device = torch.device('cpu')
+
+text ="""
+VANCOUVER, British Columbia and SEATTLE, April 05, 2021 (GLOBE NEWSWIRE) -- Chinook Therapeutics, Inc. (NASDAQ: KDNY), a biopharmaceutical company focused on the discovery, development and commercialization of precision medicines for kidney diseases, today announced a transaction with Van Herk Investments, a leading European life science investor, to create and fund a new company called Sairopa, with a pipeline focused on research and development of non-renal monoclonal antibodies generated through Aduro Biotech’s B-Select platform. Chinook will own approximately 40 percent of Sairopa after the first tranche of financing from Van Herk and have one seat on Sairopa’s Board of Directors. We are pleased to partner with Van Herk to form Sairopa to continue advancing the non-renal antibody programs we acquired through the Aduro Biotech merger last year,” said Tom Frohlich, chief business officer of Chinook. Van Herk is a well-respected investment firm, and we are confident they will marshal the capital, talent and resources to develop these programs, while Chinook focuses on continuing to advance its kidney disease pipeline.” As part of the merger, Chinook also assumed Aduro’s collaboration and license agreements with Novartis Pharmaceuticals Corporation (Novartis), Eli Lilly and Company (Lilly) and Merck Sharpe & Dohme Corp. (Merck). Novartis recently notified Chinook that it has discontinued development of the final STING pathway activation program under the collaboration, and as a result, has provided notice of termination of the Novartis collaboration and license agreement.
+
+"""
+
+
+preprocess_text = text.strip().replace("\n","")
+t5_prepared_Text = "summarize: "+preprocess_text
+print ("original text preprocessed: \n", preprocess_text)
+
+tokenized_text = tokenizer.encode(t5_prepared_Text, return_tensors="pt").to(device)
+
+
+# summmarize
+summary_ids = model.generate(tokenized_text,
+                                    num_beams=20,
+                                    no_repeat_ngram_size=2,
+                                    min_length=40,
+                                    max_length=80,
+                                    early_stopping=True)
+
+output = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+print ("\n\nSummarized text: \n",output)
+
+print('It took', time.time()-start, 'seconds.')
